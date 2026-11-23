@@ -1,0 +1,266 @@
+# Reguły przysłów pogodowych (PILOTAŻ – 12 reguł do przeglądu przed formalizacją reszty).
+#
+# Schemat jednej reguły:
+#   id            - unikalny identyfikator
+#   typ           - warunkowe | dzien | od_dnia | okres (zgodny z kategorią wariantów)
+#   warianty      - teksty przysłów (dokładnie jak w data/przyslowia_pogodowe.json) o IDENTYCZNYM znaczeniu
+#   interpretacja - jednym zdaniem, co reguła twierdzi
+#   pewnosc       - wysoka | srednia | niska  (pewność interpretacji, nie trafności!)
+#   uwagi         - wątpliwości, alternatywne interpretacje, decyzje do podjęcia
+#
+#   [regula.warunek]        (tylko typ 'warunkowe')
+#     okno    = { od = ..., do = ... }   kalendarz.toml klucz | "MM-DD" | "MM-koniec"
+#     zjawisko + slowa                   warunek progowy/anomalia ze słownika
+#     albo grupa + stan = "dowolny"      dla reguł 'jaki X, taki Y'
+#
+#   [[regula.przewidywanie]] (jedno lub więcej, każde dla jednej zmiennej lub grupy)
+#     okno    = { od = ..., do = ... }   do może być też "koniec_pory_roku"
+#     zjawisko + slowa
+#     albo grupa + relacja = "taki_sam" | "przeciwny"
+#
+# Okno przewidywania = pierwsze wystąpienie zaczynające się w dniu warunku lub później
+# (dla reguł bez warunku – w roku kalendarzowym). Szczegóły: METODOLOGIA.md, rozdz. 3.
+
+# ======================================================================== warunkowe
+
+[[regula]]
+id = "barbara_odwilz__boze_narodzenie_mroz"
+typ = "warunkowe"
+warianty = [
+    "Barbara po wodzie, Boże Narodzenie po lodzie",
+    "święta Barbara po wodzie, Boże Narodzenie po lodzie",
+    "święto Barbary po wodzie, Boże Narodzenie po lodzie",
+]
+interpretacja = "Odwilż na św. Barbarę zapowiada dzień mroźny w Boże Narodzenie."
+pewnosc = "srednia"
+uwagi = ["Para z regułą barbara_mroz__boze_narodzenie_odwilz: razem twierdzą, że pogoda w Boże Narodzenie jest odwrotna niż na Barbarę."]
+
+[regula.warunek]
+okno = { od = "barbara", do = "barbara" }
+zjawisko = "tsr_dodatnia"
+slowa = ["po wodzie"]
+
+[[regula.przewidywanie]]
+okno = { od = "boze_narodzenie", do = "boze_narodzenie" }
+zjawisko = "dzien_mrozny"
+slowa = ["po lodzie"]
+
+
+[[regula]]
+id = "barbara_mroz__boze_narodzenie_odwilz"
+typ = "warunkowe"
+warianty = [
+    "gdy na świętą Barbarę gęś chodzi po lodzie, to Boże Narodzenie będzie po wodzie",
+    "gdy w świętą Barbarę gęś chodzi po lodzie, to Boże Narodzenie będzie po wodzie",
+    "gdy w świętą Barbarę gęś po stawie chodzi, w Boże Narodzenie pływać po nim się godzi",
+    "święta Barbara po lodzie, Boże Narodzenie po wodzie",
+]
+interpretacja = "Dzień mroźny na św. Barbarę zapowiada odwilż w Boże Narodzenie."
+pewnosc = "srednia"
+uwagi = ["Para z regułą barbara_odwilz__boze_narodzenie_mroz."]
+
+[regula.warunek]
+okno = { od = "barbara", do = "barbara" }
+zjawisko = "dzien_mrozny"
+slowa = ["gęś chodzi po lodzie", "gęś po stawie chodzi", "po lodzie"]
+
+[[regula.przewidywanie]]
+okno = { od = "boze_narodzenie", do = "boze_narodzenie" }
+zjawisko = "tsr_dodatnia"
+slowa = ["po wodzie", "pływać po nim się godzi"]
+
+
+[[regula]]
+id = "katarzyna__grudzien_taki_sam"
+typ = "warunkowe"
+warianty = [
+    "Katarzyny dzień jaki, cały grudzień będzie taki",
+    "Katarzyny dzień jaki, cały grudzień taki",
+]
+interpretacja = "Każdy dzień grudnia ma taką klasę pogody (temperatura, opad, zachmurzenie) jak dzień św. Katarzyny."
+pewnosc = "srednia"
+uwagi = ["'Jaki' nie mówi, o którą cechę pogody chodzi – przyjęto grupę pogoda_ogolna (patrz słownik)."]
+
+[regula.warunek]
+okno = { od = "katarzyna", do = "katarzyna" }
+grupa = "pogoda_ogolna"
+stan = "dowolny"
+
+[[regula.przewidywanie]]
+okno = { od = "12-01", do = "12-koniec" }
+grupa = "pogoda_ogolna"
+relacja = "taki_sam"
+
+
+[[regula]]
+id = "michal_deszcz__zima_lagodna"
+typ = "warunkowe"
+warianty = [
+    "gdy deszcz w świętego Michała, będzie łagodna zima cała",
+    "gdy w Michała deszcz spadnie, lekka zima będzie snadnie",
+]
+interpretacja = "Dzień z opadem na św. Michała zapowiada zimę cieplejszą niż zwykle."
+pewnosc = "wysoka"
+uwagi = [
+    "Wariant 'jeśli deszcz na Michała, zima będzie nietrwała' NIE został tu włączony: 'nietrwała' może znaczyć 'krótka' albo 'z odwilżami', a nie 'ciepła'. Osobna reguła w pełnej formalizacji.",
+]
+
+[regula.warunek]
+okno = { od = "michal", do = "michal" }
+zjawisko = "dzien_z_opadem"
+slowa = ["deszcz"]
+
+[[regula.przewidywanie]]
+okno = { od = "12-01", do = "02-koniec" }
+zjawisko = "temp_powyzej_normy"
+slowa = ["łagodna zima", "lekka zima"]
+
+
+[[regula]]
+id = "pazdziernik_cieply__zima_mrozna"
+typ = "warunkowe"
+warianty = ["gdy październik ciepło trzyma, zwykle mroźna bywa zima"]
+interpretacja = "Październik cieplejszy niż zwykle zapowiada zimę zimniejszą niż zwykle."
+pewnosc = "wysoka"
+uwagi = [
+    "Warunek obejmuje cały miesiąc – oceniany na średniej temperaturze października względem normy października.",
+    "Słowo 'zwykle' w przysłowiu przyznaje, że reguła nie zawsze działa – zgodne z oceną statystyczną.",
+]
+
+[regula.warunek]
+okno = { od = "10-01", do = "10-koniec" }
+zjawisko = "temp_powyzej_normy"
+slowa = ["ciepło trzyma"]
+
+[[regula.przewidywanie]]
+okno = { od = "12-01", do = "02-koniec" }
+zjawisko = "temp_ponizej_normy"
+slowa = ["mroźna zima"]
+
+
+[[regula]]
+id = "zwiastowanie__wielkanoc_taki_sam"
+typ = "warunkowe"
+warianty = ["jakie Zwiastowanie, takie Zmartwychwstanie"]
+interpretacja = "Wielkanoc ma taką klasę pogody (temperatura, opad, zachmurzenie) jak dzień Zwiastowania (25 III)."
+pewnosc = "srednia"
+uwagi = [
+    "Wielkanoc wypada między 22 III a 25 IV. W latach, gdy Wielkanoc przypada przed 25 III lub tego dnia, reguła nie ma sensu (przewidywanie przed warunkiem) i rok jest pomijany – lista takich lat w raporcie walidacji.",
+]
+
+[regula.warunek]
+okno = { od = "zwiastowanie", do = "zwiastowanie" }
+grupa = "pogoda_ogolna"
+stan = "dowolny"
+
+[[regula.przewidywanie]]
+okno = { od = "wielkanoc", do = "wielkanoc" }
+grupa = "pogoda_ogolna"
+relacja = "taki_sam"
+
+# ======================================================================== dzień
+
+[[regula]]
+id = "dorota_snieg"
+typ = "dzien"
+warianty = ["na dzień świętej Doroty ma być śniega nad płoty"]
+interpretacja = "Na św. Dorotę (6 II) leży śnieg."
+pewnosc = "niska"
+uwagi = [
+    "DECYZJA DO PODJĘCIA: próg pokrywy. Dosłownie 'nad płoty' (>1 m) na nizinach nie występuje. Przyjęto ≥ 1 cm; alternatywa: grubość w górnym tercylu dla 6 II.",
+]
+
+[[regula.przewidywanie]]
+okno = { od = "dorota", do = "dorota" }
+zjawisko = "pokrywa_sniezna"
+slowa = ["śniega nad płoty"]
+
+
+[[regula]]
+id = "zimni_ogrodnicy_12_14"
+typ = "dzien"
+warianty = ["Pankracy, Serwacy, Bonifacy, każdy swoim zimnem raczy"]
+interpretacja = "Dni 12–14 V są chłodniejsze, niż wynikałoby z pory roku."
+pewnosc = "wysoka"
+uwagi = [
+    "Norma musi być wygładzoną krzywą sezonową – inaczej ewentualny chłodny epizod 12–14 V 'wejdzie' do normy tych dni i test stanie się tautologią (METODOLOGIA 3.7).",
+    "Osobna reguła od wariantu z Zośką (inne okno: 12–15 V) i od wariantu o ogrodach (inne zjawisko: przymrozek).",
+]
+
+[[regula.przewidywanie]]
+okno = { od = "pankracy", do = "bonifacy" }
+zjawisko = "temp_ponizej_normy"
+slowa = ["swoim zimnem raczy"]
+
+
+[[regula]]
+id = "zimni_ogrodnicy_i_zoska_12_15"
+typ = "dzien"
+warianty = ["Pankracy, Serwacy, Bonifacy i Zośka to zimni święci"]
+interpretacja = "Dni 12–15 V są chłodniejsze, niż wynikałoby z pory roku."
+pewnosc = "wysoka"
+uwagi = ["Jak zimni_ogrodnicy_12_14, ale z 'zimną Zośką' (15 V)."]
+
+[[regula.przewidywanie]]
+okno = { od = "pankracy", do = "zofia" }
+zjawisko = "temp_ponizej_normy"
+slowa = ["zimni"]
+
+
+[[regula]]
+id = "ogrodnicy_przymrozek_12_14"
+typ = "dzien"
+warianty = ["Pankracy, Serwacy i Bonifacy – źli na ogrody chłopacy"]
+interpretacja = "W dniach 12–14 V występuje przymrozek."
+pewnosc = "srednia"
+uwagi = [
+    "Przymrozek w powietrzu (2 m) w połowie maja jest rzadki; przy gruncie częstszy. Wybór wysokości pomiaru zależy od dostępnych danych.",
+]
+
+[[regula.przewidywanie]]
+okno = { od = "pankracy", do = "bonifacy" }
+zjawisko = "przymrozek"
+slowa = ["źli na ogrody"]
+
+# ======================================================================== od dnia
+
+[[regula]]
+id = "grzegorz_koniec_zimy"
+typ = "od_dnia"
+warianty = [
+    "na świętego Grzegorza idzie zima do morza",
+    "na świętego Grzegorza zima idzie do morza",
+    "od Grzegorza zima idzie do morza",
+]
+interpretacja = "Od św. Grzegorza (12 III) do końca wiosny dni mają dodatnią średnią temperaturę."
+pewnosc = "srednia"
+uwagi = [
+    "Brak końca okresu w przysłowiu – zgodnie z METODOLOGIA 3.5 okno trwa do końca pory roku (31 V).",
+    "Wariant 'na świętego Grzegorza idą rzeki do morza' NIE został włączony: mówi o roztopach i wysokiej wodzie, nie o temperaturze.",
+]
+
+[[regula.przewidywanie]]
+okno = { od = "grzegorz", do = "koniec_pory_roku" }
+zjawisko = "tsr_dodatnia"
+slowa = ["zima idzie do morza"]
+
+# ======================================================================== okres
+
+[[regula]]
+id = "kwiecien_plecien"
+typ = "okres"
+warianty = [
+    "kwiecień plecień, bo przeplata trochę zimy, trochę lata",
+    "kwiecień plecień, bo przeplata: trochę zimy, trochę lata",
+]
+interpretacja = "W kwietniu temperatura zmienia się z dnia na dzień bardziej niż w innych miesiącach."
+pewnosc = "wysoka"
+uwagi = [
+    "Twierdzenie o klimacie, nie o konkretnym roku – testowane raz, porównaniem kwietnia z innymi miesiącami (rodzaj 'porownanie_okresow').",
+    "Nie daje rekomendacji na konkretne dni, więc nie bierze udziału w szeregowaniu po mocy.",
+]
+
+[[regula.przewidywanie]]
+okno = { od = "04-01", do = "04-koniec" }
+zjawisko = "kwiecien_zmienniejszy"
+slowa = ["przeplata trochę zimy, trochę lata"]

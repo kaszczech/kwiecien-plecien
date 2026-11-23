@@ -1,0 +1,7 @@
+{
+  "zrodlo": "https://pl.wiktionary.org/w/api.php",
+  "kategoria": "Kategoria:Polskie przysłowia",
+  "pobrano_utc": "2026-11-23T17:24:52+00:00",
+  "liczba_hasel": 1064,
+  "uwagi": "lastrevid w przyslowia_wszystkie.json pozwala odtworzyć dokładną wersję każdego hasła (https://pl.wiktionary.org/w/index.php?oldid=<lastrevid>)"
+}

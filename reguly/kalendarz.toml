@@ -1,0 +1,66 @@
+# Kalendarz terminów używanych w przysłowiach.
+# data = "MM-DD" (kalendarz gregoriański) albo ruchome = "<nazwa algorytmu>".
+# Przysłowia odnoszą się do tradycyjnego kalendarza ludowego; tam, gdzie współczesny kalendarz
+# liturgiczny przesunął wspomnienie, używamy daty tradycyjnej i zaznaczamy to w 'uwagi'.
+
+[barbara]
+nazwa = "św. Barbara"
+data = "12-04"
+zrodlo = "wspomnienie św. Barbary, 4 grudnia (kalendarz liturgiczny i ludowy)"
+
+[boze_narodzenie]
+nazwa = "Boże Narodzenie"
+data = "12-25"
+zrodlo = "uroczystość Bożego Narodzenia, 25 grudnia"
+
+[katarzyna]
+nazwa = "św. Katarzyna"
+data = "11-25"
+zrodlo = "wspomnienie św. Katarzyny Aleksandryjskiej, 25 listopada"
+
+[michal]
+nazwa = "św. Michał"
+data = "09-29"
+zrodlo = "święto św. Michała Archanioła, 29 września"
+
+[zwiastowanie]
+nazwa = "Zwiastowanie"
+data = "03-25"
+zrodlo = "uroczystość Zwiastowania Pańskiego, 25 marca"
+uwagi = "W latach, gdy 25 III wypada w Wielkim Tygodniu, liturgia przenosi obchody; przysłowie traktujemy jako przywiązane do daty 25 III."
+
+[wielkanoc]
+nazwa = "Wielkanoc (Zmartwychwstanie)"
+ruchome = "wielkanoc_gregorianska"
+zrodlo = "niedziela wielkanocna liczona algorytmem computus dla kalendarza gregoriańskiego"
+
+[dorota]
+nazwa = "św. Dorota"
+data = "02-06"
+zrodlo = "wspomnienie św. Doroty, 6 lutego"
+
+[pankracy]
+nazwa = "św. Pankracy"
+data = "05-12"
+zrodlo = "wspomnienie św. Pankracego, 12 maja; pierwszy z 'zimnych ogrodników'"
+
+[serwacy]
+nazwa = "św. Serwacy"
+data = "05-13"
+zrodlo = "wspomnienie św. Serwacego, 13 maja (tradycja ludowa)"
+
+[bonifacy]
+nazwa = "św. Bonifacy"
+data = "05-14"
+zrodlo = "wspomnienie św. Bonifacego z Tarsu, 14 maja (tradycja ludowa)"
+
+[zofia]
+nazwa = "św. Zofia (Zośka)"
+data = "05-15"
+zrodlo = "wspomnienie św. Zofii, 15 maja; 'zimna Zośka'"
+
+[grzegorz]
+nazwa = "św. Grzegorz"
+data = "03-12"
+zrodlo = "tradycyjne wspomnienie św. Grzegorza Wielkiego, 12 marca"
+uwagi = "Od reformy kalendarza liturgicznego w 1969 r. wspomnienie przypada 3 IX; przysłowia odnoszą się do daty tradycyjnej 12 III."

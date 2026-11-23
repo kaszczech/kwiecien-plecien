@@ -1,0 +1,206 @@
+# Słownik pojęć: dwie warstwy.
+#
+# [zjawisko.*] - mierzalne zjawisko, zdefiniowane na danych dobowych.
+#   zmienna   - grupa, w której reguły są szeregowane (temperatura, opad, pokrywa_sniezna,
+#               wiatr, zachmurzenie, burza)
+#   wielkosc  - kod mierzonej wielkości (patrz [wielkosc.*])
+#   rodzaj    - "zdarzenie"         : warunek progowy na wartości dobowej (operator + prog)
+#               "anomalia"          : klasa tercylowa względem normy (klasa = ponizej|w_normie|powyzej)
+#               "porownanie_okresow": twierdzenie o klimacie, testowane raz na całym zbiorze,
+#                                     nie rok po roku (np. "kwiecień zmienniejszy niż inne miesiące")
+#
+# [[slowo]] - ludowe określenie z przysłowia -> zjawisko, z uzasadnieniem i pewnością interpretacji.
+
+[wielkosc.tsr]
+opis = "średnia dobowa temperatura powietrza (2 m)"
+jednostka = "°C"
+
+[wielkosc.tmin]
+opis = "minimalna dobowa temperatura powietrza (2 m)"
+jednostka = "°C"
+
+[wielkosc.tmax]
+opis = "maksymalna dobowa temperatura powietrza (2 m)"
+jednostka = "°C"
+
+[wielkosc.opad]
+opis = "dobowa suma opadu atmosferycznego"
+jednostka = "mm"
+
+[wielkosc.pokrywa]
+opis = "grubość pokrywy śnieżnej (obserwacja poranna)"
+jednostka = "cm"
+
+[wielkosc.zachmurzenie]
+opis = "średnie dobowe zachmurzenie ogólne"
+jednostka = "oktanty"
+
+[wielkosc.dtsr]
+opis = "bezwzględna zmiana średniej dobowej temperatury względem dnia poprzedniego"
+jednostka = "°C"
+
+# ---------------------------------------------------------------- zjawiska
+
+[zjawisko.tsr_dodatnia]
+zmienna = "temperatura"
+wielkosc = "tsr"
+rodzaj = "zdarzenie"
+operator = ">"
+prog = 0.0
+uzasadnienie = "Średnia dobowa powyżej 0 °C oznacza przewagę topnienia nad zamarzaniem (odwilż)."
+
+[zjawisko.dzien_mrozny]
+zmienna = "temperatura"
+wielkosc = "tmax"
+rodzaj = "zdarzenie"
+operator = "<"
+prog = 0.0
+uzasadnienie = "Definicja klimatologiczna IMGW: dzień mroźny = temperatura maksymalna < 0 °C (lód nie topnieje przez całą dobę)."
+
+[zjawisko.przymrozek]
+zmienna = "temperatura"
+wielkosc = "tmin"
+rodzaj = "zdarzenie"
+operator = "<"
+prog = 0.0
+uzasadnienie = "Temperatura minimalna powietrza (2 m) < 0 °C. Uwaga: IMGW 'dzień przymrozkowy' wymaga dodatkowo Tmax > 0 °C; tu liczy się każdy spadek poniżej zera. Przymrozek przy gruncie (5 cm) jest częstszy – do rozważenia, jeśli dane go zawierają."
+
+[zjawisko.dzien_z_opadem]
+zmienna = "opad"
+wielkosc = "opad"
+rodzaj = "zdarzenie"
+operator = ">="
+prog = 0.1
+uzasadnienie = "Definicja klimatologiczna IMGW: dzień z opadem = suma dobowa ≥ 0,1 mm."
+
+[zjawisko.pokrywa_sniezna]
+zmienna = "pokrywa_sniezna"
+wielkosc = "pokrywa"
+rodzaj = "zdarzenie"
+operator = ">="
+prog = 1.0
+uzasadnienie = "Definicja klimatologiczna IMGW: dzień z pokrywą śnieżną = grubość ≥ 1 cm."
+
+[zjawisko.temp_powyzej_normy]
+zmienna = "temperatura"
+wielkosc = "tsr"
+rodzaj = "anomalia"
+klasa = "powyzej"
+uzasadnienie = "Górny tercyl rozkładu Tśr względem normy (1991–2020, z poprawką na trend)."
+
+[zjawisko.temp_ponizej_normy]
+zmienna = "temperatura"
+wielkosc = "tsr"
+rodzaj = "anomalia"
+klasa = "ponizej"
+uzasadnienie = "Dolny tercyl rozkładu Tśr względem normy (1991–2020, z poprawką na trend)."
+
+[zjawisko.kwiecien_zmienniejszy]
+zmienna = "temperatura"
+wielkosc = "dtsr"
+rodzaj = "porownanie_okresow"
+uzasadnienie = "Twierdzenie o klimacie: zmienność temperatury z dnia na dzień w kwietniu jest większa niż w pozostałych miesiącach. Porównanie z normą samego kwietnia byłoby tautologią (każdy tercyl = 1/3), więc test porównuje rozkład dtsr w kwietniu z innymi miesiącami."
+
+# ---------------------------------------------------------------- grupy zmiennych
+
+[grupa.pogoda_ogolna]
+zmienne = ["temperatura", "opad", "zachmurzenie"]
+uzasadnienie = "Przysłowia typu 'jaki X, taki Y' nie mówią, o którą cechę pogody chodzi. Przyjmujemy trzy podstawowe: temperaturę, opad i zachmurzenie; każda oceniana osobno jako klasa tercylowa."
+
+# ---------------------------------------------------------------- ludowe określenia
+
+[[slowo]]
+tekst = "po wodzie"
+zjawisko = "tsr_dodatnia"
+pewnosc = "srednia"
+uzasadnienie = "Woda zamiast lodu na drogach i stawach = odwilż."
+
+[[slowo]]
+tekst = "pływać po nim się godzi"
+zjawisko = "tsr_dodatnia"
+pewnosc = "srednia"
+uzasadnienie = "Staw rozmarznięty (gęś pływa zamiast chodzić po lodzie) = odwilż."
+
+[[slowo]]
+tekst = "po lodzie"
+zjawisko = "dzien_mrozny"
+pewnosc = "srednia"
+uzasadnienie = "Lód utrzymuje się na drogach i wodzie przez całą dobę = dzień mroźny."
+
+[[slowo]]
+tekst = "gęś chodzi po lodzie"
+zjawisko = "dzien_mrozny"
+pewnosc = "srednia"
+uzasadnienie = "Staw zamarznięty na tyle, że można po nim chodzić = dzień mroźny."
+
+[[slowo]]
+tekst = "gęś po stawie chodzi"
+zjawisko = "dzien_mrozny"
+pewnosc = "srednia"
+uzasadnienie = "Staw zamarznięty na tyle, że można po nim chodzić = dzień mroźny."
+
+[[slowo]]
+tekst = "deszcz"
+zjawisko = "dzien_z_opadem"
+pewnosc = "wysoka"
+uzasadnienie = "Dzień z opadem. Nie rozróżniamy deszczu i śniegu – pod koniec września opad to praktycznie zawsze deszcz."
+
+[[slowo]]
+tekst = "łagodna zima"
+zjawisko = "temp_powyzej_normy"
+pewnosc = "wysoka"
+uzasadnienie = "Zima cieplejsza niż zwykle."
+
+[[slowo]]
+tekst = "lekka zima"
+zjawisko = "temp_powyzej_normy"
+pewnosc = "wysoka"
+uzasadnienie = "Zima cieplejsza niż zwykle (synonim 'łagodnej')."
+
+[[slowo]]
+tekst = "mroźna zima"
+zjawisko = "temp_ponizej_normy"
+pewnosc = "wysoka"
+uzasadnienie = "Zima zimniejsza niż zwykle. Nie wymagamy dnia mroźnego (Tmax < 0) w każdy dzień – to byłoby dużo mocniejsze twierdzenie niż sens przysłowia."
+
+[[slowo]]
+tekst = "ciepło trzyma"
+zjawisko = "temp_powyzej_normy"
+pewnosc = "wysoka"
+uzasadnienie = "Okres cieplejszy niż zwykle."
+
+[[slowo]]
+tekst = "zimni"
+zjawisko = "temp_ponizej_normy"
+pewnosc = "wysoka"
+uzasadnienie = "Dni chłodniejsze niż wynikałoby z pory roku."
+
+[[slowo]]
+tekst = "swoim zimnem raczy"
+zjawisko = "temp_ponizej_normy"
+pewnosc = "wysoka"
+uzasadnienie = "Dni chłodniejsze niż wynikałoby z pory roku."
+
+[[slowo]]
+tekst = "źli na ogrody"
+zjawisko = "przymrozek"
+pewnosc = "srednia"
+uzasadnienie = "Szkody w ogrodach w maju wyrządzają przymrozki, nie samo ochłodzenie."
+
+[[slowo]]
+tekst = "śniega nad płoty"
+zjawisko = "pokrywa_sniezna"
+pewnosc = "niska"
+uzasadnienie = "Dosłownie: pokrywa wyższa niż płot (>1 m) – na nizinach praktycznie nie występuje, więc przysłowie byłoby fałszywe z definicji. Przyjmujemy słabszą interpretację: leży śnieg (≥ 1 cm). Alternatywa do decyzji: pokrywa w górnym tercylu dla tego dnia."
+
+[[slowo]]
+tekst = "zima idzie do morza"
+zjawisko = "tsr_dodatnia"
+pewnosc = "srednia"
+uzasadnienie = "Zima odchodzi (spływa z wodą do morza) = od tego dnia przeważają dni z dodatnią średnią temperaturą."
+
+[[slowo]]
+tekst = "przeplata trochę zimy, trochę lata"
+zjawisko = "kwiecien_zmienniejszy"
+pewnosc = "wysoka"
+uzasadnienie = "Pogoda zmienna: dni zimne przeplatają się z ciepłymi."

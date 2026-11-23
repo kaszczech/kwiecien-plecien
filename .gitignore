@@ -1,0 +1,16 @@
+# Środowisko Pythona
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# IDE i lokalne ustawienia
+.idea/
+.vscode/
+.claude/settings.local.json
+
+# Pliki tymczasowe Excela (otwarty arkusz)
+~$*.xlsx
+
+# Przykładowy skrypt PyCharma (nie jest częścią projektu)
+main.py
