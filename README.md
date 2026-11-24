@@ -41,7 +41,9 @@ python -m venv venv
 Opcje `rules.py`:
 - `--rok 2024`: konkretne daty okien każdej reguły w danym roku,
 - `--przesuniecie -2`: wszystkie terminy przysłów (święta) 2 dni wcześniej (zakres ±30),
-  bez zmiany granic miesięcy i pór roku – patrz METODOLOGIA 3.10.
+  bez zmiany granic miesięcy i pór roku – patrz METODOLOGIA 3.10,
+- `--tolerancja-przed 0 --tolerancja-po 1`: warunek sprawdzany w dniu święta i dzień po nim;
+  wystarczy, że pasuje którykolwiek dzień (zakres 0–7) – patrz METODOLOGIA 3.11.
 
 Pełne odtworzenie od zera (kolejno): `fetch_proverbs.py` → `select_weather_proverbs.py` →
 `export_review.py` → `rules.py`. Uwaga: `fetch_proverbs.py` pobiera aktualny stan Wikisłownika,

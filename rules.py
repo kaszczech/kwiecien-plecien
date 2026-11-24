@@ -13,6 +13,7 @@ Uruchomienie:
   python rules.py                      walidacja + eksport arkusza przeglądu
   python rules.py --rok 2024           dodatkowo konkretne daty okien w 2024 r.
   python rules.py --przesuniecie -2    wszystkie terminy przysłów 2 dni wcześniej
+  python rules.py --tolerancja-po 1    warunek sprawdzany w dniu święta i dzień po nim
 """
 from __future__ import annotations
 
@@ -74,6 +75,7 @@ def koniec_pory_roku(d: date) -> date:
 
 
 MAX_PRZESUNIECIE = 30  # dni; większe przesunięcie zmieniałoby porę roku, a nie „dzień czy dwa”
+MAX_TOLERANCJA = 7     # dni; tolerancja ma oddawać niepewność „który dzień”, nie zamieniać dnia w okres
 
 
 @dataclass
@@ -83,14 +85,31 @@ class Kalendarz:
     przesuniecie - liczba dni (ujemna = wcześniej), o którą przesuwane są WSZYSTKIE terminy
     z kalendarza (święta stałe i ruchome), w warunku i w przewidywaniu jednakowo.
     Daty literalne ("MM-DD", "MM-koniec") i "koniec_pory_roku" NIE są przesuwane: oznaczają
-    granice miesięcy i pór roku, a nie dni przysłów (METODOLOGIA 3.10)."""
+    granice miesięcy i pór roku, a nie dni przysłów (METODOLOGIA 3.10).
+
+    tolerancja_przed / tolerancja_po - o ile dni rozszerzyć OKNO WARUNKU przed jego początkiem /
+    po jego końcu, jeśli ten koniec okna jest terminem z kalendarza (np. Barbara, po=1 -> 4–5 XII).
+    Warunek jest spełniony, jeśli spełnia go którykolwiek dzień rozszerzonego okna (METODOLOGIA 3.11).
+    Okno przewidywania nie jest rozszerzane."""
     wpisy: dict
     przesuniecie: int = 0
+    tolerancja_przed: int = 0
+    tolerancja_po: int = 0
 
     def __post_init__(self) -> None:
-        if not isinstance(self.przesuniecie, int) or abs(self.przesuniecie) > MAX_PRZESUNIECIE:
+        if (not isinstance(self.przesuniecie, int) or isinstance(self.przesuniecie, bool)
+                or abs(self.przesuniecie) > MAX_PRZESUNIECIE):
             raise ValueError(f"przesunięcie musi być liczbą całkowitą z zakresu ±{MAX_PRZESUNIECIE} dni, "
                              f"podano {self.przesuniecie!r}")
+        for nazwa in ("tolerancja_przed", "tolerancja_po"):
+            t = getattr(self, nazwa)
+            if not isinstance(t, int) or isinstance(t, bool) or not 0 <= t <= MAX_TOLERANCJA:
+                raise ValueError(f"{nazwa.replace('_', ' ')} musi być liczbą całkowitą z zakresu "
+                                 f"0–{MAX_TOLERANCJA} dni, podano {t!r}")
+
+    @property
+    def parametry_domyslne(self) -> bool:
+        return self.przesuniecie == 0 and self.tolerancja_przed == 0 and self.tolerancja_po == 0
 
     def czy_przesuwany(self, token: str) -> bool:
         return token in self.wpisy
@@ -141,6 +160,19 @@ class Kalendarz:
             return None
         return start, koniec
 
+    def okno_warunku(self, okno: dict, kotwica: date) -> tuple[date, date] | None:
+        """Okno warunku rozszerzone o tolerancję po stronie terminów z kalendarza.
+        Granice miesięcy ("10-01" – "10-koniec") nie są rozszerzane."""
+        o = self.okno(okno, kotwica)
+        if o is None:
+            return None
+        start, koniec = o
+        if self.czy_przesuwany(okno["od"]):
+            start -= timedelta(days=self.tolerancja_przed)
+        if self.czy_przesuwany(okno["do"]):
+            koniec += timedelta(days=self.tolerancja_po)
+        return start, koniec
+
     def opis_tokenu(self, token: str) -> str:
         if token == "koniec_pory_roku":
             return "koniec pory roku"
@@ -165,8 +197,10 @@ class Kalendarz:
 
 # ------------------------------------------------------------------ wczytywanie
 
-def wczytaj(przesuniecie: int = 0) -> tuple[Kalendarz, dict, list[dict], dict[str, dict]]:
-    kal = Kalendarz(tomllib.loads((RULES_DIR / "kalendarz.toml").read_text(encoding="utf-8")), przesuniecie)
+def wczytaj(przesuniecie: int = 0, tolerancja_przed: int = 0,
+            tolerancja_po: int = 0) -> tuple[Kalendarz, dict, list[dict], dict[str, dict]]:
+    kal = Kalendarz(tomllib.loads((RULES_DIR / "kalendarz.toml").read_text(encoding="utf-8")),
+                    przesuniecie, tolerancja_przed, tolerancja_po)
     slownik = tomllib.loads((RULES_DIR / "slownik.toml").read_text(encoding="utf-8"))
     reguly = tomllib.loads((RULES_DIR / "reguly.toml").read_text(encoding="utf-8")).get("regula", [])
     przyslowia = {p["tytul"]: p for p in json.loads((DATA_DIR / "przyslowia_pogodowe.json").read_text(encoding="utf-8"))}
@@ -340,7 +374,7 @@ def okna_przewidywania(kal: Kalendarz, r: dict, przewidywanie: dict) -> OknaRegu
     pominiete: list[int] = []
     for rok in LATA:
         if "warunek" in r:
-            okno_w = kal.okno(r["warunek"]["okno"], date(rok, 1, 1))
+            okno_w = kal.okno_warunku(r["warunek"]["okno"], date(rok, 1, 1))
             okno_p = kal.okno(przewidywanie["okno"], okno_w[1], scisle_po=True) if okno_w else None
         else:
             okno_p = kal.okno(przewidywanie["okno"], date(rok, 1, 1))
@@ -541,7 +575,7 @@ def okna_w_roku(kal: Kalendarz, r: dict, rok: int) -> list[str]:
         return o[0].isoformat() if o[0] == o[1] else f"{o[0].isoformat()} – {o[1].isoformat()}"
 
     wynik = []
-    okno_w = kal.okno(r["warunek"]["okno"], date(rok, 1, 1)) if "warunek" in r else None
+    okno_w = kal.okno_warunku(r["warunek"]["okno"], date(rok, 1, 1)) if "warunek" in r else None
     if "warunek" in r:
         wynik.append(f"warunek: {fmt(okno_w)}")
     for pr in r["przewidywanie"]:
@@ -560,15 +594,23 @@ def main() -> None:
     parser.add_argument("--przesuniecie", type=int, default=0, metavar="DNI",
                         help=f"przesuń wszystkie terminy z kalendarza o DNI (ujemne = wcześniej, "
                              f"max ±{MAX_PRZESUNIECIE}); granice miesięcy i pór roku bez zmian")
+    parser.add_argument("--tolerancja-przed", type=int, default=0, metavar="DNI",
+                        help=f"rozszerz okno warunku o DNI dni przed terminem z kalendarza (0–{MAX_TOLERANCJA})")
+    parser.add_argument("--tolerancja-po", type=int, default=0, metavar="DNI",
+                        help=f"rozszerz okno warunku o DNI dni po terminie z kalendarza (0–{MAX_TOLERANCJA})")
     parser.add_argument("--rok", type=int, metavar="RRRR",
                         help="pokaż konkretne daty okien każdej reguły w danym roku")
     args = parser.parse_args()
     try:
-        kal, slownik, reguly, przyslowia = wczytaj(args.przesuniecie)
+        kal, slownik, reguly, przyslowia = wczytaj(args.przesuniecie, args.tolerancja_przed, args.tolerancja_po)
     except ValueError as e:
         parser.error(str(e))
     if kal.przesuniecie:
-        print(f"PRZESUNIĘCIE TERMINÓW: {kal.przesuniecie:+d} dni\n")
+        print(f"PRZESUNIĘCIE TERMINÓW: {kal.przesuniecie:+d} dni")
+    if kal.tolerancja_przed or kal.tolerancja_po:
+        print(f"TOLERANCJA WARUNKU: {kal.tolerancja_przed} dni przed, {kal.tolerancja_po} dni po terminie")
+    if not kal.parametry_domyslne:
+        print()
     bledy = waliduj(kal, slownik, reguly, przyslowia)
     if bledy:
         print(f"BŁĘDY WALIDACJI ({len(bledy)}):")
@@ -593,9 +635,9 @@ def main() -> None:
     pokryte = {w for r in reguly for w in r["warianty"]}
     print(f"\nPokrycie: {len(pokryte)} z {len(testowalne)} przysłów (warunkowe/dzien/od_dnia/okres)")
 
-    if kal.przesuniecie:
-        # Arkusz przeglądu opisuje definicje reguł, które nie zależą od przesunięcia.
-        print("Arkusz przeglądu nie jest zapisywany przy przesunięciu ≠ 0.")
+    if not kal.parametry_domyslne:
+        # Arkusz przeglądu opisuje definicje reguł, które nie zależą od przesunięcia ani tolerancji.
+        print("Arkusz przeglądu jest zapisywany tylko przy domyślnych parametrach (przesunięcie i tolerancja 0).")
         return
     sciezka = DATA_DIR / "reguly_przeglad.xlsx"
     eksportuj_xlsx(wiersze, kal, slownik, sciezka)

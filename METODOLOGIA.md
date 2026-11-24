@@ -106,6 +106,30 @@ trafność przysłowia zależy od dokładnego dnia. Uwaga: przeszukanie wielu pr
 najlepszego to wielokrotne testowanie – raportujemy cały profil (trafność dla każdego przesunięcia),
 nie tylko maksimum, a ewentualny wybór najlepszego przesunięcia wymaga korekty istotności.
 
+### 3.11 Tolerancja okna warunku (parametr, 2026-11-24)
+Nie zawsze wiadomo, czy przysłowie mówi dokładnie o dniu święta, czy o „okolicy” (np. dzień
+św. Barbary i dzień po nim). Dlatego okno warunku można rozszerzyć parametrami
+`--tolerancja-przed DNI` i `--tolerancja-po DNI` (0–7, domyślnie 0):
+- rozszerzane są tylko te końce okna warunku, które są terminami z kalendarza (Barbara po=1
+  → 4–5 XII); warunki-miesiące (październik) i okna przewidywania – **nie**;
+- najpierw stosowane jest przesunięcie (3.10), potem tolerancja;
+- warunek progowy lub tercylowy jest **spełniony, jeśli spełnia go którykolwiek dzień** okna
+  z tolerancją. To jest równoważne „bierzemy najlepiej pasujący dzień”: najlepiej pasujący dzień
+  spełnia warunek wtedy i tylko wtedy, gdy spełnia go którykolwiek dzień;
+- to wyjątek od zasady agregacji z 3.2: tolerancja wyraża niepewność, **który** dzień jest
+  właściwy, a nie twierdzenie o całym okresie;
+- warunki „jaki X, taki Y” (grupa, stan dowolny): „najlepiej pasujący dzień” musiałby być wybierany
+  po wyniku przewidywania, co zawyżałoby trafność. Propozycja: stan warunku = klasa wartości
+  zagregowanej z okna z tolerancją (średnia temperatura, suma opadu, średnie zachmurzenie).
+  **Do decyzji autora.**
+- lata, w których okno przewidywania zaczyna się w oknie warunku z tolerancją lub przed nim,
+  są pomijane (3.9); np. Zwiastowanie z tolerancją po=1 pomija dodatkowo 1967, 1978, 1989.
+
+Wpływ na ocenę: szerszy warunek jest spełniony w większej liczbie lat, ale nie zmienia
+częstości przewidywanego zjawiska, z którą porównujemy wynik – nie zawyża więc trafności sam
+z siebie. Jak przy przesunięciu: wynik główny dla tolerancji 0, inne wartości jako profil
+wrażliwości, bez wybierania najlepszej bez korekty na wielokrotne testowanie.
+
 ## 4. Implementacja reguł
 
 - `reguly/kalendarz.toml` – terminy ze źródłem daty,
