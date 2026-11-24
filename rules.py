@@ -29,7 +29,7 @@ DATA_DIR = ROOT / "data"
 LATA = range(1951, 2026)
 
 TYPY = {"warunkowe", "dzien", "od_dnia", "okres"}
-RODZAJE = {"zdarzenie", "anomalia", "porownanie_okresow"}
+RODZAJE = {"zdarzenie", "anomalia", "porownanie_okresow", "zmiana_wzgledem_poprzedzajacych"}
 KLASY = {"ponizej", "w_normie", "powyzej"}
 OPERATORY = {"<", "<=", ">", ">=", "=="}
 RELACJE = {"taki_sam", "przeciwny"}
@@ -189,8 +189,12 @@ def waliduj(kal: Kalendarz, slownik: dict, reguly: list[dict], przyslowia: dict[
             bledy.append(f"{p}: nieznany rodzaj {z.get('rodzaj')!r}")
         if z.get("rodzaj") == "zdarzenie" and (z.get("operator") not in OPERATORY or "prog" not in z):
             bledy.append(f"{p}: zdarzenie wymaga 'operator' i 'prog'")
-        if z.get("rodzaj") == "anomalia" and z.get("klasa") not in KLASY:
-            bledy.append(f"{p}: anomalia wymaga 'klasa' z {sorted(KLASY)}")
+        if z.get("rodzaj") in ("anomalia", "zmiana_wzgledem_poprzedzajacych") and z.get("klasa") not in KLASY:
+            bledy.append(f"{p}: {z['rodzaj']} wymaga 'klasa' z {sorted(KLASY)}")
+        if z.get("rodzaj") == "zmiana_wzgledem_poprzedzajacych":
+            n = z.get("dni_odniesienia")
+            if not isinstance(n, int) or isinstance(n, bool) or n < 1:
+                bledy.append(f"{p}: zmiana_wzgledem_poprzedzajacych wymaga 'dni_odniesienia' (liczba dni ≥ 1)")
         if not z.get("uzasadnienie"):
             bledy.append(f"{p}: brak uzasadnienia")
     for klucz, g in grupy.items():
@@ -330,6 +334,10 @@ def opis_zjawiska(slownik: dict, klucz: str) -> str:
     if z["rodzaj"] == "anomalia":
         klasa = {"ponizej": "poniżej normy", "w_normie": "w normie", "powyzej": "powyżej normy"}[z["klasa"]]
         return f"{w['opis']} {klasa}"
+    if z["rodzaj"] == "zmiana_wzgledem_poprzedzajacych":
+        klasa = {"ponizej": "spadek", "w_normie": "bez zmiany", "powyzej": "wzrost"}[z["klasa"]]
+        return (f"{klasa} anomalii ({w['opis']}) względem {z['dni_odniesienia']} dni przed oknem "
+                f"(tercyl rozkładu takich zmian)")
     return f"porównanie okresów: {w['opis']}"
 
 

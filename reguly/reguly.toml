@@ -1,4 +1,4 @@
-# Reguły przysłów pogodowych (PILOTAŻ – 12 reguł do przeglądu przed formalizacją reszty).
+# Reguły przysłów pogodowych (PILOTAŻ – reguły do przeglądu przed formalizacją reszty).
 #
 # Schemat jednej reguły:
 #   id            - unikalny identyfikator
@@ -164,63 +164,41 @@ relacja = "taki_sam"
 id = "dorota_snieg"
 typ = "dzien"
 warianty = ["na dzień świętej Doroty ma być śniega nad płoty"]
-interpretacja = "Na św. Dorotę (6 II) leży śnieg."
-pewnosc = "niska"
+interpretacja = "Na św. Dorotę (6 II) występują intensywne opady śniegu (przyrost pokrywy ≥ 15 cm w ciągu doby)."
+pewnosc = "srednia"
 uwagi = [
-    "DECYZJA DO PODJĘCIA: próg pokrywy. Dosłownie 'nad płoty' (>1 m) na nizinach nie występuje. Przyjęto ≥ 1 cm; alternatywa: grubość w górnym tercylu dla 6 II.",
+    "Decyzja autora (2026-11-24): 'śniega nad płoty' = mocne opady śniegu tego dnia, nie grubość pokrywy (dosłownie > 1 m na nizinach nie występuje).",
+    "Próg 15 cm/24 h = kryterium ostrzeżenia IMGW stopnia 1 (patrz słownik: intensywny_opad_sniegu); źródło do potwierdzenia na imgw.pl. Analiza wrażliwości: 10 cm.",
+    "Do ustalenia na etapie danych: która doba obserwacyjna odpowiada 6 II (obserwacja poranna 6 II czy 7 II).",
 ]
 
 [[regula.przewidywanie]]
 okno = { od = "dorota", do = "dorota" }
-zjawisko = "pokrywa_sniezna"
+zjawisko = "intensywny_opad_sniegu"
 slowa = ["śniega nad płoty"]
 
 
 [[regula]]
-id = "zimni_ogrodnicy_12_14"
+id = "zimni_ogrodnicy"
 typ = "dzien"
-warianty = ["Pankracy, Serwacy, Bonifacy, każdy swoim zimnem raczy"]
-interpretacja = "Dni 12–14 V są chłodniejsze, niż wynikałoby z pory roku."
+warianty = [
+    "Pankracy, Serwacy, Bonifacy, każdy swoim zimnem raczy",
+    "Pankracy, Serwacy, Bonifacy i Zośka to zimni święci",
+    "Pankracy, Serwacy i Bonifacy – źli na ogrody chłopacy",
+]
+interpretacja = "W dniach 12–15 V następuje załamanie pogody: wyraźne ochłodzenie względem tygodnia poprzedzającego (5–11 V)."
 pewnosc = "wysoka"
 uwagi = [
-    "Norma musi być wygładzoną krzywą sezonową – inaczej ewentualny chłodny epizod 12–14 V 'wejdzie' do normy tych dni i test stanie się tautologią (METODOLOGIA 3.7).",
-    "Osobna reguła od wariantu z Zośką (inne okno: 12–15 V) i od wariantu o ogrodach (inne zjawisko: przymrozek).",
+    "Decyzja autora (2026-11-24): wszystkie warianty łączymy w jedną regułę, okno 12–15 V, sprawdzamy załamanie pogody. Wyjątek od METODOLOGIA 3.1 – warianty różnią się zakresem dni (z Zośką lub bez) i akcentem (zimno / szkody w ogrodach), ale opisują to samo zjawisko.",
+    "Miara: spadek anomalii Tśr względem 7 dni przed oknem, w dolnym tercylu rozkładu takich spadków dla okien 4-dniowych w IV–VI. Punkt odniesienia: inne okna 4-dniowe w tym samym sezonie.",
+    "Norma musi być wygładzoną krzywą sezonową (METODOLOGIA 3.7), inaczej ochłodzenie 12–15 V 'wejdzie' do normy.",
+    "Przymrozek (wariant o ogrodach) nie jest warunkiem – raportowany dodatkowo, opisowo.",
 ]
-
-[[regula.przewidywanie]]
-okno = { od = "pankracy", do = "bonifacy" }
-zjawisko = "temp_ponizej_normy"
-slowa = ["swoim zimnem raczy"]
-
-
-[[regula]]
-id = "zimni_ogrodnicy_i_zoska_12_15"
-typ = "dzien"
-warianty = ["Pankracy, Serwacy, Bonifacy i Zośka to zimni święci"]
-interpretacja = "Dni 12–15 V są chłodniejsze, niż wynikałoby z pory roku."
-pewnosc = "wysoka"
-uwagi = ["Jak zimni_ogrodnicy_12_14, ale z 'zimną Zośką' (15 V)."]
 
 [[regula.przewidywanie]]
 okno = { od = "pankracy", do = "zofia" }
-zjawisko = "temp_ponizej_normy"
-slowa = ["zimni"]
-
-
-[[regula]]
-id = "ogrodnicy_przymrozek_12_14"
-typ = "dzien"
-warianty = ["Pankracy, Serwacy i Bonifacy – źli na ogrody chłopacy"]
-interpretacja = "W dniach 12–14 V występuje przymrozek."
-pewnosc = "srednia"
-uwagi = [
-    "Przymrozek w powietrzu (2 m) w połowie maja jest rzadki; przy gruncie częstszy. Wybór wysokości pomiaru zależy od dostępnych danych.",
-]
-
-[[regula.przewidywanie]]
-okno = { od = "pankracy", do = "bonifacy" }
-zjawisko = "przymrozek"
-slowa = ["źli na ogrody"]
+zjawisko = "zalamanie_temperatury"
+slowa = ["zimni", "swoim zimnem raczy", "źli na ogrody"]
 
 # ======================================================================== od dnia
 

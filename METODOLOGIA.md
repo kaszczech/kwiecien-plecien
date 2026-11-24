@@ -33,6 +33,10 @@ tworzą jedną regułę. Warianty różniące się terminem lub kierunkiem to **
 (np. „Barbara po wodzie → Boże Narodzenie po lodzie” i „Barbara po lodzie → Boże Narodzenie
 po wodzie”). Dzięki temu jedna myśl nie liczy się wielokrotnie w statystyce.
 
+Wyjątek (decyzja autora, 2026-11-24): warianty opisujące **to samo zjawisko** różniące się jedynie
+zakresem dni lub akcentem mogą zostać połączone, jeśli autor tak zdecyduje; decyzja jest wtedy
+zapisana w `uwagi` reguły i w rozdz. 6 (np. zimni ogrodnicy).
+
 ### 3.2 Przewidywanie dotyczy każdego dnia okna
 Przewidywanie reguły to stwierdzenie o **każdym dniu** okna przewidywania, osobno dla każdej
 zmiennej (temperatura, opad, pokrywa śnieżna, wiatr, zachmurzenie, burza).
@@ -101,3 +105,29 @@ w raporcie (`rules.py`).
 - Kalendarz juliański: część przysłów może pochodzić sprzed reformy gregoriańskiej (1582),
   więc daty mogą być przesunięte o ok. 10 dni. Do rozważenia analiza wrażliwości (± dni).
 - Wybór zbioru danych (kandydat: dane synoptyczne IMGW-PIB) i stacji.
+- Potwierdzenie kryterium „intensywne opady śniegu” w aktualnym dokumencie IMGW-PIB (rozdz. 6.2).
+- Czy zbiór danych zawiera wysokość świeżo spadłego śniegu, czy trzeba liczyć przyrost pokrywy.
+
+## 6. Decyzje z przeglądu pilotażu (2026-11-24)
+
+### 6.1 Zimni ogrodnicy – jedna reguła, „załamanie pogody”
+Trzy reguły (12–14 V chłodniej, 12–15 V chłodniej, 12–14 V przymrozek) połączone w jedną
+`zimni_ogrodnicy`, okno 12–15 V. Przysłowie twierdzi, że następuje **załamanie pogody**:
+- miara: średnia anomalia Tśr w oknie (względem wygładzonej normy sezonowej) minus średnia
+  anomalia z 7 dni przed oknem (5–11 V);
+- „załamanie” = dolny tercyl rozkładu tej różnicy dla wszystkich okien 4-dniowych w IV–VI
+  w okresie normy;
+- punkt odniesienia: losowe okno 4-dniowe spełnia warunek w ok. 1/3 przypadków, więc przysłowie
+  jest prawdziwe, jeśli 12–15 V spełnia go istotnie częściej;
+- przymrozek nie jest warunkiem – raportowany dodatkowo, opisowo.
+
+Uzasadnienie: porównanie z poprzedzającym tygodniem mierzy to, o czym mówi tradycja (nagły powrót
+zimna), a nie samo „chłodno jak na maj”; dodatkowo odporne na błąd normy w danym roku.
+
+### 6.2 Św. Dorota – intensywne opady śniegu
+„Śniega nad płoty” = mocne opady śniegu 6 II, a nie grubość pokrywy (dosłowny sens, > 1 m, na nizinach
+nie występuje). Definicja: przyrost pokrywy ≥ 15 cm w ciągu doby – kryterium ostrzeżenia IMGW-PIB
+„intensywne opady śniegu”, stopień 1, sezon zimowy (15–20 cm / 24 h; 10–15 cm / 12 h).
+Próg wzięty ze standardu zewnętrznego, a nie dobrany do danych. Analiza wrażliwości: 10 cm.
+Źródło kryterium: „Klasyfikacja stopni groźnych zjawisk meteorologiczno-hydrologicznych”
+(kopia: powiatprudnicki.pl/download/attachment/29592/…, bez daty) – **do potwierdzenia** na imgw.pl.

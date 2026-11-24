@@ -13,7 +13,7 @@ norma klimatyczna) są opisane w [METODOLOGIA.md](METODOLOGIA.md).
 |------|------|
 | 1. Pobranie przysłów z Wikisłownika | gotowe (1064 hasła) |
 | 2. Wybór i klasyfikacja przysłów pogodowych | gotowe (232, przejrzane) |
-| 3. Formalizacja reguł | pilotaż: 12 reguł / 22 przysłowia |
+| 3. Formalizacja reguł | pilotaż: 10 reguł / 22 przysłowia |
 | 4. Dane meteorologiczne i norma | do zrobienia |
 | 5. Weryfikacja reguł | do zrobienia |
 
