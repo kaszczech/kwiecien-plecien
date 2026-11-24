@@ -131,3 +131,8 @@ nie występuje). Definicja: przyrost pokrywy ≥ 15 cm w ciągu doby – kryteri
 Próg wzięty ze standardu zewnętrznego, a nie dobrany do danych. Analiza wrażliwości: 10 cm.
 Źródło kryterium: „Klasyfikacja stopni groźnych zjawisk meteorologiczno-hydrologicznych”
 (kopia: powiatprudnicki.pl/download/attachment/29592/…, bez daty) – **do potwierdzenia** na imgw.pl.
+
+### 6.3 Kwiecień plecień – zostaje jako test klimatyczny
+Rozważano usunięcie reguły jako trudnej do sprawdzenia. Decyzja: zostaje w obecnej formie
+(rozdz. 3.8) – jednorazowy test, czy zmienność temperatury z dnia na dzień (|ΔTśr|) jest w kwietniu
+największa ze wszystkich miesięcy. Nie daje prognoz na konkretne dni.

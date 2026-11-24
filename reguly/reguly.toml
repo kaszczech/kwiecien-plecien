@@ -236,6 +236,7 @@ pewnosc = "wysoka"
 uwagi = [
     "Twierdzenie o klimacie, nie o konkretnym roku – testowane raz, porównaniem kwietnia z innymi miesiącami (rodzaj 'porownanie_okresow').",
     "Nie daje rekomendacji na konkretne dni, więc nie bierze udziału w szeregowaniu po mocy.",
+    "Decyzja autora (2026-11-24): reguła zostaje jako jednorazowy test klimatyczny – czy zmienność temperatury z dnia na dzień jest w kwietniu największa ze wszystkich miesięcy. Rozważano usunięcie jako trudnej do sprawdzenia.",
 ]
 
 [[regula.przewidywanie]]
