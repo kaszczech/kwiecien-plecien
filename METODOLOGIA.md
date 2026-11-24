@@ -89,6 +89,23 @@ Jeśli okno przewidywania wypadałoby przed oknem warunku (np. Wielkanoc przed 2
 „jakie Zwiastowanie, takie Zmartwychwstanie”), rok jest pomijany dla tej reguły i odnotowany
 w raporcie (`rules.py`).
 
+### 3.10 Przesunięcie terminów (parametr, 2026-11-24)
+Przysłowia bywały używane dzień czy dwa przed lub po święcie, a część może pochodzić z kalendarza
+juliańskiego (rozdz. 5). Dlatego przesunięcie terminów jest **parametrem analizy**
+(`rules.py --przesuniecie DNI`, zakres ±30 dni, domyślnie 0):
+- przesuwane są **wszystkie terminy z kalendarza** (`kalendarz.toml`: święta stałe i ruchome),
+  w warunku i w przewidywaniu o tyle samo – zachowany jest odstęp między nimi;
+- **nie** są przesuwane granice miesięcy i pór roku („MM-DD”, „MM-koniec”, „koniec_pory_roku”):
+  „grudzień” czy „zima” to okresy klimatyczne, a nie dni przysłowia;
+- pora roku dla „koniec_pory_roku” wynika z daty **nieprzesuniętej** (Grzegorz −13 dni = 27 II,
+  ale okno nadal trwa do końca wiosny, 31 V);
+- przesunięty termin może przejść przez Nowy Rok (Boże Narodzenie +10 = 4 I).
+
+Wynik główny raportujemy dla przesunięcia 0. Inne przesunięcia służą analizie wrażliwości: czy
+trafność przysłowia zależy od dokładnego dnia. Uwaga: przeszukanie wielu przesunięć i wybór
+najlepszego to wielokrotne testowanie – raportujemy cały profil (trafność dla każdego przesunięcia),
+nie tylko maksimum, a ewentualny wybór najlepszego przesunięcia wymaga korekty istotności.
+
 ## 4. Implementacja reguł
 
 - `reguly/kalendarz.toml` – terminy ze źródłem daty,
@@ -103,7 +120,8 @@ w raporcie (`rules.py`).
 ## 5. Otwarte kwestie
 
 - Kalendarz juliański: część przysłów może pochodzić sprzed reformy gregoriańskiej (1582),
-  więc daty mogą być przesunięte o ok. 10 dni. Do rozważenia analiza wrażliwości (± dni).
+  więc daty mogą być przesunięte o ok. 10 dni (od 1700 r. o 11, od 1900 r. o 13). Narzędzie:
+  parametr przesunięcia (rozdz. 3.10); zakres przesunięć do analizy – do ustalenia.
 - Wybór zbioru danych (kandydat: dane synoptyczne IMGW-PIB) i stacji.
 - Potwierdzenie kryterium „intensywne opady śniegu” w aktualnym dokumencie IMGW-PIB (rozdz. 6.2).
 - Czy zbiór danych zawiera wysokość świeżo spadłego śniegu, czy trzeba liczyć przyrost pokrywy.

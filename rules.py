@@ -9,7 +9,10 @@ Pliki wejściowe:
 Walidacja przerywa działanie przy pierwszej grupie błędów (lista wszystkich znalezionych).
 Wynik: raport w konsoli + data/reguly_przeglad.xlsx do przeglądu.
 
-Uruchomienie:  python rules.py
+Uruchomienie:
+  python rules.py                      walidacja + eksport arkusza przeglądu
+  python rules.py --rok 2024           dodatkowo konkretne daty okien w 2024 r.
+  python rules.py --przesuniecie -2    wszystkie terminy przysłów 2 dni wcześniej
 """
 from __future__ import annotations
 
@@ -70,9 +73,27 @@ def koniec_pory_roku(d: date) -> date:
     return date(d.year, koniec, monthrange(d.year, koniec)[1])
 
 
+MAX_PRZESUNIECIE = 30  # dni; większe przesunięcie zmieniałoby porę roku, a nie „dzień czy dwa”
+
+
 @dataclass
 class Kalendarz:
+    """Terminy z kalendarz.toml.
+
+    przesuniecie - liczba dni (ujemna = wcześniej), o którą przesuwane są WSZYSTKIE terminy
+    z kalendarza (święta stałe i ruchome), w warunku i w przewidywaniu jednakowo.
+    Daty literalne ("MM-DD", "MM-koniec") i "koniec_pory_roku" NIE są przesuwane: oznaczają
+    granice miesięcy i pór roku, a nie dni przysłów (METODOLOGIA 3.10)."""
     wpisy: dict
+    przesuniecie: int = 0
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.przesuniecie, int) or abs(self.przesuniecie) > MAX_PRZESUNIECIE:
+            raise ValueError(f"przesunięcie musi być liczbą całkowitą z zakresu ±{MAX_PRZESUNIECIE} dni, "
+                             f"podano {self.przesuniecie!r}")
+
+    def czy_przesuwany(self, token: str) -> bool:
+        return token in self.wpisy
 
     def czy_token(self, token: str) -> bool:
         return (token in self.wpisy or bool(RE_DATA.match(token)) or bool(RE_KONIEC.match(token))
@@ -81,12 +102,14 @@ class Kalendarz:
     def czy_ruchomy(self, token: str) -> bool:
         return token in self.wpisy and "ruchome" in self.wpisy[token]
 
-    def w_roku(self, token: str, rok: int) -> date:
+    def w_roku(self, token: str, rok: int, przesun: bool = True) -> date:
+        """Data tokenu dla roku 'rok' (święto ruchome: liczone dla tego roku).
+        Termin z kalendarza jest przesuwany o self.przesuniecie (chyba że przesun=False),
+        więc wynik może wypaść w sąsiednim roku kalendarzowym."""
         if token in self.wpisy:
             w = self.wpisy[token]
-            if "ruchome" in w:
-                return RUCHOME[w["ruchome"]](rok)
-            token = w["data"]
+            baza = RUCHOME[w["ruchome"]](rok) if "ruchome" in w else self.w_roku(w["data"], rok)
+            return baza + timedelta(days=self.przesuniecie if przesun else 0)
         if m := RE_DATA.match(token):
             return date(rok, int(m[1]), int(m[2]))
         if m := RE_KONIEC.match(token):
@@ -96,21 +119,23 @@ class Kalendarz:
 
     def pierwsze_od(self, token: str, kotwica: date, scisle_po: bool) -> date | None:
         """Pierwsze wystąpienie tokenu w dniu kotwicy lub później (albo ściśle po).
-        Dla świąt ruchomych tylko w tym samym roku – inaczej None (rok pomijany)."""
-        d = self.w_roku(token, kotwica.year)
-        za_wczesnie = d <= kotwica if scisle_po else d < kotwica
-        if not za_wczesnie:
-            return d
-        if self.czy_ruchomy(token):
-            return None
-        return self.w_roku(token, kotwica.year + 1)
+        Dla świąt ruchomych tylko wystąpienie z roku kotwicy – inaczej None (rok pomijany).
+        Sprawdzany jest też rok poprzedni, bo przesunięty termin może przejść przez Nowy Rok."""
+        lata = [kotwica.year] if self.czy_ruchomy(token) else [kotwica.year - 1, kotwica.year, kotwica.year + 1]
+        kandydaci = [d for d in (self.w_roku(token, r) for r in lata)
+                     if (d > kotwica if scisle_po else d >= kotwica)]
+        return min(kandydaci, default=None)
 
     def okno(self, okno: dict, kotwica: date, scisle_po: bool = False) -> tuple[date, date] | None:
         start = self.pierwsze_od(okno["od"], kotwica, scisle_po)
         if start is None:
             return None
         if okno["do"] == "koniec_pory_roku":
-            return start, koniec_pory_roku(start)
+            # Pora roku wynika z NIEPRZESUNIĘTEJ daty terminu: przesunięcie zmienia dzień przysłowia,
+            # a nie to, o której porze roku przysłowie mówi.
+            baza = start - timedelta(days=self.przesuniecie) if self.czy_przesuwany(okno["od"]) else start
+            koniec = koniec_pory_roku(baza)
+            return (start, koniec) if start <= koniec else None
         koniec = self.pierwsze_od(okno["do"], start, scisle_po=False)
         if koniec is None:
             return None
@@ -121,10 +146,11 @@ class Kalendarz:
             return "koniec pory roku"
         if token in self.wpisy:
             w = self.wpisy[token]
+            p = f" {self.przesuniecie:+d} dni" if self.przesuniecie else ""
             if "ruchome" in w:
-                return f"{w['nazwa']} (święto ruchome)"
+                return f"{w['nazwa']} (święto ruchome{p})"
             mies, dz = map(int, w["data"].split("-"))
-            return f"{w['nazwa']} ({dz} {RZYMSKIE[mies]})"
+            return f"{w['nazwa']} ({dz} {RZYMSKIE[mies]}{p})"
         if m := RE_DATA.match(token):
             return f"{int(m[2])} {RZYMSKIE[int(m[1])]}"
         if m := RE_KONIEC.match(token):
@@ -139,8 +165,8 @@ class Kalendarz:
 
 # ------------------------------------------------------------------ wczytywanie
 
-def wczytaj() -> tuple[Kalendarz, dict, list[dict], dict[str, dict]]:
-    kal = Kalendarz(tomllib.loads((RULES_DIR / "kalendarz.toml").read_text(encoding="utf-8")))
+def wczytaj(przesuniecie: int = 0) -> tuple[Kalendarz, dict, list[dict], dict[str, dict]]:
+    kal = Kalendarz(tomllib.loads((RULES_DIR / "kalendarz.toml").read_text(encoding="utf-8")), przesuniecie)
     slownik = tomllib.loads((RULES_DIR / "slownik.toml").read_text(encoding="utf-8"))
     reguly = tomllib.loads((RULES_DIR / "reguly.toml").read_text(encoding="utf-8")).get("regula", [])
     przyslowia = {p["tytul"]: p for p in json.loads((DATA_DIR / "przyslowia_pogodowe.json").read_text(encoding="utf-8"))}
@@ -507,8 +533,42 @@ def eksportuj_xlsx(wiersze: list[dict], kal: Kalendarz, slownik: dict, sciezka: 
 
 # ------------------------------------------------------------------ main
 
+def okna_w_roku(kal: Kalendarz, r: dict, rok: int) -> list[str]:
+    """Konkretne daty okien reguły dla jednego roku (do kontroli wzrokowej)."""
+    def fmt(o: tuple[date, date] | None) -> str:
+        if o is None:
+            return "rok pominięty"
+        return o[0].isoformat() if o[0] == o[1] else f"{o[0].isoformat()} – {o[1].isoformat()}"
+
+    wynik = []
+    okno_w = kal.okno(r["warunek"]["okno"], date(rok, 1, 1)) if "warunek" in r else None
+    if "warunek" in r:
+        wynik.append(f"warunek: {fmt(okno_w)}")
+    for pr in r["przewidywanie"]:
+        if "warunek" in r:
+            okno_p = kal.okno(pr["okno"], okno_w[1], scisle_po=True) if okno_w else None
+        else:
+            okno_p = kal.okno(pr["okno"], date(rok, 1, 1))
+        wynik.append(f"przewidywanie: {fmt(okno_p)}")
+    return wynik
+
+
 def main() -> None:
-    kal, slownik, reguly, przyslowia = wczytaj()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--przesuniecie", type=int, default=0, metavar="DNI",
+                        help=f"przesuń wszystkie terminy z kalendarza o DNI (ujemne = wcześniej, "
+                             f"max ±{MAX_PRZESUNIECIE}); granice miesięcy i pór roku bez zmian")
+    parser.add_argument("--rok", type=int, metavar="RRRR",
+                        help="pokaż konkretne daty okien każdej reguły w danym roku")
+    args = parser.parse_args()
+    try:
+        kal, slownik, reguly, przyslowia = wczytaj(args.przesuniecie)
+    except ValueError as e:
+        parser.error(str(e))
+    if kal.przesuniecie:
+        print(f"PRZESUNIĘCIE TERMINÓW: {kal.przesuniecie:+d} dni\n")
     bledy = waliduj(kal, slownik, reguly, przyslowia)
     if bledy:
         print(f"BŁĘDY WALIDACJI ({len(bledy)}):")
@@ -524,10 +584,19 @@ def main() -> None:
         if w["pominiete_lata"]:
             print(f"{'':40s} pominięte lata: {w['pominiete_lata']}")
 
+    if args.rok:
+        print(f"\nOkna w roku {args.rok} (warunek liczony od 1 I {args.rok}):")
+        for r in reguly:
+            print(f"  {r['id']:40s} " + "; ".join(okna_w_roku(kal, r, args.rok)))
+
     testowalne = {t for t, p in przyslowia.items() if p["kategoria"] in TYPY}
     pokryte = {w for r in reguly for w in r["warianty"]}
     print(f"\nPokrycie: {len(pokryte)} z {len(testowalne)} przysłów (warunkowe/dzien/od_dnia/okres)")
 
+    if kal.przesuniecie:
+        # Arkusz przeglądu opisuje definicje reguł, które nie zależą od przesunięcia.
+        print("Arkusz przeglądu nie jest zapisywany przy przesunięciu ≠ 0.")
+        return
     sciezka = DATA_DIR / "reguly_przeglad.xlsx"
     eksportuj_xlsx(wiersze, kal, slownik, sciezka)
     print(f"Zapisano {sciezka}")
