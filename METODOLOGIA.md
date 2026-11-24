@@ -118,12 +118,12 @@ Nie zawsze wiadomo, czy przysłowie mówi dokładnie o dniu święta, czy o „o
   spełnia warunek wtedy i tylko wtedy, gdy spełnia go którykolwiek dzień;
 - to wyjątek od zasady agregacji z 3.2: tolerancja wyraża niepewność, **który** dzień jest
   właściwy, a nie twierdzenie o całym okresie;
-- warunki „jaki X, taki Y” (grupa, stan dowolny): „najlepiej pasujący dzień” musiałby być wybierany
-  po wyniku przewidywania, co zawyżałoby trafność. Propozycja: stan warunku = klasa wartości
-  zagregowanej z okna z tolerancją (średnia temperatura, suma opadu, średnie zachmurzenie).
-  **Do decyzji autora.**
+- warunki „jaki X, taki Y” (grupa, stan dowolny) **nie podlegają tolerancji** – zawsze tylko dzień
+  święta (decyzja autora, 2026-11-24). Powód: nie ma czego dopasować, a wybór „najlepiej pasującego
+  dnia” musiałby patrzeć na wynik przewidywania, co zawyżałoby trafność. Odrzucona alternatywa:
+  stan warunku = wartość zagregowana z okna z tolerancją;
 - lata, w których okno przewidywania zaczyna się w oknie warunku z tolerancją lub przed nim,
-  są pomijane (3.9); np. Zwiastowanie z tolerancją po=1 pomija dodatkowo 1967, 1978, 1989.
+  są pomijane (3.9). (Zwiastowanie to reguła „jaki X, taki Y”, więc tolerancja go nie zmienia.)
 
 Wpływ na ocenę: szerszy warunek jest spełniony w większej liczbie lat, ale nie zmienia
 częstości przewidywanego zjawiska, z którą porównujemy wynik – nie zawyża więc trafności sam

@@ -90,7 +90,7 @@ class Kalendarz:
     tolerancja_przed / tolerancja_po - o ile dni rozszerzyć OKNO WARUNKU przed jego początkiem /
     po jego końcu, jeśli ten koniec okna jest terminem z kalendarza (np. Barbara, po=1 -> 4–5 XII).
     Warunek jest spełniony, jeśli spełnia go którykolwiek dzień rozszerzonego okna (METODOLOGIA 3.11).
-    Okno przewidywania nie jest rozszerzane."""
+    Okno przewidywania i warunki 'jaki X, taki Y' nie są rozszerzane."""
     wpisy: dict
     przesuniecie: int = 0
     tolerancja_przed: int = 0
@@ -160,12 +160,14 @@ class Kalendarz:
             return None
         return start, koniec
 
-    def okno_warunku(self, okno: dict, kotwica: date) -> tuple[date, date] | None:
+    def okno_warunku(self, warunek: dict, kotwica: date) -> tuple[date, date] | None:
         """Okno warunku rozszerzone o tolerancję po stronie terminów z kalendarza.
-        Granice miesięcy ("10-01" – "10-koniec") nie są rozszerzane."""
+        Granice miesięcy ("10-01" – "10-koniec") nie są rozszerzane.
+        Warunki 'jaki X, taki Y' (grupa) nigdy nie są rozszerzane (decyzja autora, METODOLOGIA 3.11)."""
+        okno = warunek["okno"]
         o = self.okno(okno, kotwica)
-        if o is None:
-            return None
+        if o is None or "grupa" in warunek:
+            return o
         start, koniec = o
         if self.czy_przesuwany(okno["od"]):
             start -= timedelta(days=self.tolerancja_przed)
@@ -374,7 +376,7 @@ def okna_przewidywania(kal: Kalendarz, r: dict, przewidywanie: dict) -> OknaRegu
     pominiete: list[int] = []
     for rok in LATA:
         if "warunek" in r:
-            okno_w = kal.okno_warunku(r["warunek"]["okno"], date(rok, 1, 1))
+            okno_w = kal.okno_warunku(r["warunek"], date(rok, 1, 1))
             okno_p = kal.okno(przewidywanie["okno"], okno_w[1], scisle_po=True) if okno_w else None
         else:
             okno_p = kal.okno(przewidywanie["okno"], date(rok, 1, 1))
@@ -575,7 +577,7 @@ def okna_w_roku(kal: Kalendarz, r: dict, rok: int) -> list[str]:
         return o[0].isoformat() if o[0] == o[1] else f"{o[0].isoformat()} – {o[1].isoformat()}"
 
     wynik = []
-    okno_w = kal.okno_warunku(r["warunek"]["okno"], date(rok, 1, 1)) if "warunek" in r else None
+    okno_w = kal.okno_warunku(r["warunek"], date(rok, 1, 1)) if "warunek" in r else None
     if "warunek" in r:
         wynik.append(f"warunek: {fmt(okno_w)}")
     for pr in r["przewidywanie"]:
