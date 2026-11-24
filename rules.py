@@ -392,14 +392,55 @@ def zestawienie(kal: Kalendarz, slownik: dict, reguly: list[dict]) -> list[dict]
 
 # ------------------------------------------------------------------ eksport
 
+RECZNE_KOLUMNY = ("Akceptuję", "Twoje uwagi")  # wypełniane przez recenzenta, przenoszone między eksportami
+
+
+def wczytaj_reczne_kolumny(sciezka: Path) -> dict[str, dict[str, dict[str, object]]]:
+    """{arkusz: {klucz wiersza: {kolumna: wartość}}} z poprzedniego eksportu.
+    Kluczem jest ID reguły (Reguły) albo pierwsza kolumna (Słownik, Kalendarz)."""
+    if not sciezka.exists():
+        return {}
+    from openpyxl import load_workbook
+
+    wb = load_workbook(sciezka)
+    wynik: dict[str, dict[str, dict[str, object]]] = {}
+    for ws in wb.worksheets:
+        naglowki = [c.value for c in ws[1]]
+        kol_klucza = naglowki.index("ID") if "ID" in naglowki else 0
+        reczne = [naglowki.index(n) for n in RECZNE_KOLUMNY if n in naglowki]
+        arkusz: dict[str, dict[str, object]] = {}
+        for wiersz in ws.iter_rows(min_row=2, values_only=True):
+            if wiersz[kol_klucza] is None:
+                continue
+            arkusz[str(wiersz[kol_klucza])] = {naglowki[i]: wiersz[i] for i in reczne}
+        wynik[ws.title] = arkusz
+    return wynik
+
+
 def eksportuj_xlsx(wiersze: list[dict], kal: Kalendarz, slownik: dict, sciezka: Path) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
 
     font = "Arial"
+    poprzednie = wczytaj_reczne_kolumny(sciezka)
     wb = Workbook()
 
     def arkusz(ws, naglowki, dane, szerokosci):
+        # Przeniesienie ręcznych znaczników z poprzedniej wersji pliku (po kluczu wiersza).
+        stare = poprzednie.get(ws.title, {})
+        kol_klucza = naglowki.index("ID") if "ID" in naglowki else 0
+        obecne = set()
+        for wiersz in dane:
+            klucz = str(wiersz[kol_klucza])
+            obecne.add(klucz)
+            for nazwa, wartosc in stare.get(klucz, {}).items():
+                if nazwa in naglowki:
+                    wiersz[naglowki.index(nazwa)] = wartosc
+        utracone = [k for k, v in stare.items()
+                    if k not in obecne and v.get("Twoje uwagi") not in (None, "")]
+        for k in utracone:
+            print(f"UWAGA: arkusz {ws.title!r}: wiersz {k!r} z Twoją uwagą już nie istnieje: "
+                  f"{stare[k]['Twoje uwagi']!r}")
         for c, h in enumerate(naglowki, start=1):
             k = ws.cell(row=1, column=c, value=h)
             k.font = Font(name=font, bold=True, color="FFFFFF")
